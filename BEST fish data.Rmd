@@ -25,6 +25,11 @@ head(fish_raw)
 fish_clean <- janitor::clean_names(fish_raw)
 
 fish_tidy <- gather(data = fish_clean, key = "t_size", value = "count", -date, -survey, -site, -species) %>% separate(t_size, into = c("transect", "size"), sep = "_", convert = TRUE)
+
+fish_tidy$count <- gsub("\\(3ft\\)", "",fish_tidy$count)
+fish_tidy$count <- gsub("\\(2ft\\)", "",fish_tidy$count)
+fish_tidy$count <- as.numeric(fish_tidy$count)
+
 ```
 
 #Export as a csv
@@ -35,7 +40,19 @@ write_csv(fish_tidy, path = "data/fish_tidy.csv")
 
 ##HOORAY! SUCCESS
 
+```{r}
+head(fish_tidy)
+```
 
+```{r}
+test <- fish_tidy %>% group_by(survey, site, species) %>%
+  summarise(mn_count = mean(count, na.rm = T))
+```
 
+```{r, fig.width=9, fig.height=30}
+ggplot(test, aes(x = survey, fill = site, y = mn_count)) + 
+  geom_bar(stat = "identity") +
+  facet_wrap(~ species, ncol = 2, scales = "free_y")
+```
 
 

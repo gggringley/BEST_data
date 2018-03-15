@@ -1,6 +1,6 @@
 date,survey,site,species,transect,size,count
 2017-08-07T00:00:00Z,1,XL,Almaco Jack (Bonita),t1,5,NA
-2017-08-07T00:00:00Z,1,XL,Barber,t1,5,1000
+2017-08-07T00:00:00Z,1,XL,Barber,t1,5,1e3
 2017-08-07T00:00:00Z,1,XL,Bermuda Chromis,t1,5,300
 2017-08-07T00:00:00Z,1,XL,Lionfish,t1,5,NA
 2017-08-07T00:00:00Z,1,XL,Pygmy Angelfsh,t1,5,24
@@ -262,7 +262,7 @@ date,survey,site,species,transect,size,count
 2017-08-10T00:00:00Z,1,NNE,Spotfin Hogfish,t1,10,1
 2017-08-10T00:00:00Z,1,NNE,Squirrelfish,t1,10,NA
 2017-08-10T00:00:00Z,1,NNE,Stoplight Parrotfish,t1,10,NA
-2017-08-10T00:00:00Z,1,NNE,Sunshine Damsel,t1,10,1000
+2017-08-10T00:00:00Z,1,NNE,Sunshine Damsel,t1,10,1e3
 2017-08-10T00:00:00Z,1,NNE,Yellow Headed Wrasse,t1,10,NA
 2017-08-25T00:00:00Z,2,NNE,Almaco Jack (Bonita),t1,10,NA
 2017-08-25T00:00:00Z,2,NNE,Barber,t1,10,50
@@ -1124,7 +1124,7 @@ date,survey,site,species,transect,size,count
 2017-08-09T00:00:00Z,1,HS1,Stoplight Parrotfish,t1,30,NA
 2017-08-09T00:00:00Z,1,HS1,Sunshine Damsel,t1,30,NA
 2017-08-09T00:00:00Z,1,HS1,Surgeonfish,t1,30,NA
-2017-08-10T00:00:00Z,1,NNE,Almaco Jack (Bonita),t1,30,6(3ft)
+2017-08-10T00:00:00Z,1,NNE,Almaco Jack (Bonita),t1,30,6
 2017-08-10T00:00:00Z,1,NNE,Barber,t1,30,NA
 2017-08-10T00:00:00Z,1,NNE,Bermuda Chromis,t1,30,NA
 2017-08-10T00:00:00Z,1,NNE,Horse Eye Jack,t1,30,NA
@@ -2438,7 +2438,7 @@ date,survey,site,species,transect,size,count
 2017-08-09T00:00:00Z,1,HS1,Stoplight Parrotfish,t2,30,NA
 2017-08-09T00:00:00Z,1,HS1,Sunshine Damsel,t2,30,NA
 2017-08-09T00:00:00Z,1,HS1,Surgeonfish,t2,30,NA
-2017-08-10T00:00:00Z,1,NNE,Almaco Jack (Bonita),t2,30,5(2ft)
+2017-08-10T00:00:00Z,1,NNE,Almaco Jack (Bonita),t2,30,5
 2017-08-10T00:00:00Z,1,NNE,Barber,t2,30,NA
 2017-08-10T00:00:00Z,1,NNE,Bermuda Chromis,t2,30,NA
 2017-08-10T00:00:00Z,1,NNE,Horse Eye Jack,t2,30,NA
