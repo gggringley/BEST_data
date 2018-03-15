@@ -1,0 +1,41 @@
+---
+title: "fish_surveys"
+author: "GG"
+date: "March 15, 2018"
+output: html_document
+---
+
+```{r setup, message = FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(janitor)
+```
+
+#Import data from Excel
+
+```{r}
+fish_raw <- read_excel("~/Desktop/Lionfish/BEST data/Fish Surveys.xlsx")
+head(fish_raw)
+```
+
+#Gather into columns then separate out into a column for "transect" and a column for "size_class" and finally a column for the "count"
+
+```{r}
+#rm(Fish_raw)
+fish_clean <- janitor::clean_names(fish_raw)
+
+fish_tidy <- gather(data = fish_clean, key = "t_size", value = "count", -date, -survey, -site, -species) %>% separate(t_size, into = c("transect", "size"), sep = "_", convert = TRUE)
+```
+
+#Export as a csv
+
+```{r}
+write_csv(fish_tidy, path = "data/fish_tidy.csv")
+```
+
+##HOORAY! SUCCESS
+
+
+
+
+
