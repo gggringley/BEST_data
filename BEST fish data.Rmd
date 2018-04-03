@@ -36,6 +36,7 @@ fish_tidy$count <- as.numeric(fish_tidy$count)
 
 ```{r}
 write_csv(fish_tidy, path = "data/fish_tidy.csv")
+write_excel_csv(fish_tidy, path = "~/Documents/fish_tidy.xls")
 ```
 
 ##HOORAY! SUCCESS
