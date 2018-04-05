@@ -9,6 +9,7 @@ output: html_document
 library(tidyverse)
 library(readxl)
 library(janitor)
+library(dbplyr)
 ```
 
 #Import data from Excel
@@ -56,4 +57,53 @@ ggplot(test, aes(x = survey, fill = site, y = mn_count)) +
   facet_wrap(~ species, ncol = 2, scales = "free_y")
 ```
 
+Importing new tidy_fish file with biomass and trophic group. 
+
+```{r}
+final_fish <- read_csv("~/Documents/fish_tidy.csv")
+head(final_fish)
+
+```
+
+now want to make some graphs
+
+```{r}
+ggplot(data = final_fish, aes(x = survey, y=mean(biomass), fill = trophic_guild)) + geom_bar(stat = "identity") + facet_grid(site~.) 
+```
+
+```{r}
+ggplot(data = final_fish, aes(x = site, y=mean(biomass))) + geom_col(aes(fill = trophic_guild)) 
+```
+
+
+```{r}
+ggplot(data = final_fish, aes(x = survey, y=mean(density), fill = trophic_guild)) + geom_bar(stat = "identity") + facet_grid(site~.) 
+```
+
+#Overall density of each trophic guild
+```{r}
+ggplot(data = final_fish, aes(x = trophic_guild, y = log10(density), fill = trophic_guild)) + geom_boxplot() + theme(legend.position="none")
+```
+
+#Overall biomass of each trophic guild
+
+```{r}
+ggplot(data = final_fish, aes(x = trophic_guild, y = log10(biomass), fill = trophic_guild)) + geom_boxplot() + theme(legend.position="none")
+
+```
+
+
+# Diversity by site
+```{r}
+ggplot(data = final_fish, aes(x = species, y = mean(density), fill = species)) + geom_bar(stat = "identity") + facet_grid(site~.) + labs(x = "") + theme(legend.position="none") + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+```{r}
+ggplot(data = final_fish, aes(x = species, y = mean(biomass), fill = species)) + geom_bar(stat = "identity") + facet_grid(site~.) + labs(x = "") + theme(legend.position="none") + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+Trying to plot the number of unique species counted per survey using facet grid for each site. Can't get it to work. 
+```{r}
+ggplot(data = final_fish, aes(x = survey, y = count(unique(species)))) + geom_histogram(stat = "count") + facet_grid(site~.)
+```
 
