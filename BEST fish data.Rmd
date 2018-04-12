@@ -120,13 +120,50 @@ plot(TukeyHSD(res.aov2, "site"))
 ```
 
 ```{r}
-ggplot(data = final_fish, aes(x = survey, y=biomass, fill = site)) + geom_bar(stat = "summary", fun.y = "mean", position = "dodge", width = 0.75) + stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge", width = 0.75)
+ggplot(data = final_fish, aes(x = survey, y=biomass, fill = site)) + geom_bar(stat = "summary", fun.y = "mean", position = "dodge", width = 0.75) + stat_summary(geom = "errorbar", fun.data = "mean_se", position = "dodge", width = 0.75)
 ```
 
 ```{r}
 ggplot(data = final_fish, aes(x = survey, y=biomass, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + stat_summary(geom = "errorbar", fun.data = mean_se) + geom_line(stat = "summary", fun.y = "mean")
 ```
+```{r}
+ggplot(data = final_fish, aes(x = survey, y=density, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + stat_summary(geom = "errorbar", fun.data = mean_se) + geom_line(stat = "summary", fun.y = "mean")
+```
+
+
+#Now including trophic groups into visualization
+
+```{r}
+ggplot(data = final_fish, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean")  
+```
+
+```{r}
+ggplot(data = final_fish, aes(x = survey, y=density, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean")  
+```
 
 #next will run a regression
+```{r}
+res.aov3 <- aov(biomass ~ as.character(survey), data = final_fish)
+summary.aov(res.aov3)
+TukeyHSD(res.aov3)
+
+```
+
+```{r}
+res.aov4 <- aov(density ~ as.character(survey), data = final_fish)
+summary.aov(res.aov4)
+TukeyHSD(res.aov4)
+
+```
+
+```{r}
+ggplot(data = final_fish, aes(x = date, y=density)) + geom_point(stat = "summary", fun.y = "mean")  
+```
+
+```{r}
+regression <- lm(survey~density, data = final_fish)
+summary.lm(regression)
+```
+##so now I've actually changed my xl file so that the survey number corresponds with the actual date rather than being sequential. Will run everything again - in a separate markdown file. 
 
 
