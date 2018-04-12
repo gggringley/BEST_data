@@ -1,0 +1,132 @@
+---
+title: "BEST_fish_tidy"
+author: "GG"
+date: "4/12/2018"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(dbplyr)
+```
+
+```{r}
+final_fish2 <- read_csv("~/Documents/fish_tidy2.csv")
+head(final_fish2)
+
+```
+
+Mean biomass of each trophic group per survey per site
+```{r}
+ggplot(data = final_fish2, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean") + facet_grid(site~., scales = "free")
+```
+
+```{r}
+ggplot(data = final_fish2, aes(x = survey, y=biomass, fill = site)) + geom_bar(stat = "summary", fun.y = "mean") + facet_grid(site~., scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) 
+```
+
+Anova analysis on overall biomass between surveys and sites: data square root transformed to meet the assumptions
+
+```{r}
+anova1 <- aov(sqrt(biomass) ~ as.character(survey) * site, data = final_fish2)
+summary.aov(anova1)
+TukeyHSD(anova1)
+```
+
+##Results
+1. Significant differences by site and by survey but not by the interaction, i.e. all sites follow the same trend. 
+2. Biomass is significantly higher at NNE than HS1 and XL, the latter do not differ. 
+2. Biomass is significantly higher at the first time point compared to surveys 4, 5, and 6
+2. Biomass at the second time point is the same as the first but higher than survey 5. 
+*Need to confirm data meets assumptions after transformation*
+
+```{r}
+ggplot(data = final_fish2, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean") + facet_grid(trophic_guild~site, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) 
+```
+
+```{r}
+anova2 <- aov(sqrt(biomass) ~ site * trophic_guild, data = final_fish2)
+summary.aov(anova2)
+TukeyHSD(anova2)
+```
+
+#Reuslts
+1. Significant differences in biomass of each trophic guild by site
+2. Significantly more carnivores than invtertivores, omnivores and herbivores overall
+3. Significanlty more planktivores than invertivores, omnivores and herbivores overall
+4. No difference between biomass of carnivores and planktivores
+5. NNE has significantly more planktivores and more carnivores than HS1
+6. NNE has significatnly more carnivores and planktivores than herbivores and invertivores
+7. XL has significantly more carnivores and planktivores than invertivores. 
+
+```{r}
+ggplot(data = final_fish2, aes(x = survey, y=biomass, color = survey)) + geom_point(stat = "summary", fun.y = "mean") + facet_grid(trophic_guild~site, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) + scale_y_log10()
+```
+
+```{r}
+ggplot(data = final_fish2, aes(x = survey, y=biomass, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + stat_summary(geom = "errorbar", fun.data = mean_se) + geom_line(stat = "summary", fun.y = "mean") + theme(legend.position = "none")
+```
+
+
+```{r}
+ggplot(data = final_fish2, aes(x = survey, y=density, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean") + facet_grid(site~., scales = "free") 
+```
+```{r}
+
+ggplot(data = final_fish2, aes(x = trophic_guild, y = density, fill = trophic_guild)) + geom_boxplot() + theme(legend.position = "none") + scale_y_log10()
+```
+
+
+```{r}
+
+ggplot(data = final_fish2, aes(x = trophic_guild, y = biomass, fill = trophic_guild)) + geom_boxplot() + scale_y_log10() + facet_grid(site~., scales = "free") 
+
+```
+
+```{r}
+
+ggplot(data = final_fish2, aes(x = trophic_guild, y = density, fill = trophic_guild)) + geom_boxplot() + scale_y_log10() + facet_grid(site~., scales = "free") 
+
+```
+
+```{r}
+
+ggplot(data = final_fish2, aes(x = trophic_guild, y = biomass, fill = trophic_guild)) + geom_boxplot() + theme(legend.position = "none") + scale_y_log10()
+```
+
+```{r}
+anova4 <- aov(sqrt(density) ~ as.character(survey) * site/trophic_guild, data = final_fish2)
+summary.aov(anova4)
+TukeyHSD(anova4)
+```
+
+
+##Results anova 4
+1. Significant differences by site and by survey but not by the interaction, i.e. all sites follow the same trend. 
+2. Density is significantly higher at NNE and XL than HS1. 
+2. Density is significantly higher at the first and second time points compared to surveys 4, 5, and 6
+
+*Need to confirm data meets assumptions after transformation*
+
+```{r}
+anova5 <- aov(sqrt(density) ~ trophic_guild, data = final_fish2)
+summary.aov(anova5)
+TukeyHSD(anova5)
+```
+
+```{r}
+anova6 <- aov(sqrt(biomass) ~ trophic_guild, data = final_fish2)
+summary.aov(anova6)
+TukeyHSD(anova6)
+```
+
+#Results Anova 5 and 6
+1. Higher density of planktivores than any other trophic group. No difference among others
+2. Higher biomass of carnivores and planktivores than all other groups. No difference between planktivores and carnivores. 
+
+
+
+
+
+
