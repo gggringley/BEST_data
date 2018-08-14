@@ -125,8 +125,42 @@ TukeyHSD(anova6)
 1. Higher density of planktivores than any other trophic group. No difference among others
 2. Higher biomass of carnivores and planktivores than all other groups. No difference between planktivores and carnivores. 
 
+```{r}
+lion_fish <- read_csv("~/github/BEST_data/data/lionfish_data.csv")
+head(lion_fish)
 
+```
 
+```{r}
+lion_reg <- ggplot(data = lion_fish, aes(x = survey, y=lf_quad, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + stat_summary(geom = "errorbar", fun.data = mean_se) + geom_line(stat = "summary", fun.y = "mean") + theme(legend.position = "none")
+ggsave(lion_fish, plot = lion_reg, device = "eps", path = "~/github/BEST_data")
+```
 
+```{r}
+
+```
+
+```{r}
+lion_regression <- lm(survey~lf_quad, data = lion_fish)
+summary.lm(lion_regression)
+```
+```{r}
+anovalion <- aov(sqrt(lf_quad) ~ as.character(survey), data = lion_fish)
+summary.aov(anovalion)
+TukeyHSD(anovalion)
+```
+
+```{r}
+anovalion_2way <- aov(lf_quad ~ site * survey, data = lion_fish)
+summary.aov(anovalion_2way)
+```
+```{r}
+anovalion_site <- aov(sqrt(lf_quad) ~ site, data = lion_fish)
+summary.aov(anovalion_site)
+TukeyHSD(anovalion_site)
+```
+#Results of regression and ANOVA:
+significant decrease in lionfish over time
+no difference in lionfish density by site or the interaction of site and time
 
 
