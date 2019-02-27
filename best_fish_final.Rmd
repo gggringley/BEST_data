@@ -1,0 +1,147 @@
+---
+title: "best1634"
+author: "GG"
+date: "2/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(dbplyr)
+```
+```{r}
+final_best <- read_csv("~/github/BEST_data/data/fish_tidy_best.csv")
+head(final_best)
+final_best[ final_best == 0] <-NA
+```
+
+Contrtibute of each trophic guild to biomass at each site
+```{r}
+ggplot(data = final_best, aes(x = site, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100")) + theme_bw() + labs(x="")
+```
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + scale_fill_brewer(palette = "Dark2") + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100")) + theme_bw() + labs(x="")
+```
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "stack") + scale_fill_brewer(palette = "Dark2") + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + theme_bw() + labs(y="Mean Biomass(g)")
+
+```
+
+
+Mean biomass of each trophic group per survey per site
+```{r}
+ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + scale_fill_brewer(palette = "Dark2") + facet_grid(site~., scales = "free") + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100"))+ theme_bw()
+```
+
+
+```{r}
+anovatg <- aov(sqrt(biomass) ~ as.character(trophic_guild) * site * as.character(survey), data = final_best)
+summary.aov(anovatg)
+TukeyHSD(anovatg)
+```
+```{r}
+plankto_bio <- subset(final_best, trophic_guild=="planktivore")
+anovatgpbio <- aov(sqrt(biomass) ~ site + as.character(survey), data = plankto_bio)
+summary.aov(anovatgpbio)
+TukeyHSD(anovatgpbio)
+```
+```{r}
+carno_bio <- subset(final_best, trophic_guild=="macro_carnivore")
+anovatgcbio <- aov(sqrt(biomass) ~ site + as.character(survey), data = carno_bio)
+summary.aov(anovatgcbio)
+TukeyHSD(anovatgcbio)
+```
+
+```{r}
+inverto_bio <- subset(final_best, trophic_guild=="invertivore")
+anovatgibio <- aov(sqrt(biomass) ~ site + as.character(survey), data = inverto_bio)
+summary.aov(anovatgibio)
+TukeyHSD(anovatgibio)
+```
+
+```{r}
+herbi_bio <- subset(final_best, trophic_guild=="herbivore")
+anovatghbio <- aov(sqrt(biomass) ~ site + as.character(survey), data = herbi_bio)
+summary.aov(anovatghbio)
+TukeyHSD(anovatghbio)
+```
+
+```{r}
+omni_bio <- subset(final_best, trophic_guild=="omnivore")
+anovatgobio <- aov(sqrt(biomass) ~ site + as.character(survey), data = omni_bio)
+summary.aov(anovatgobio)
+TukeyHSD(anovatgobio)
+```
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=biomass, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Biomass (g)") + stat_summary(geom = "errorbar", fun.data = mean_se) + theme_bw() + theme(legend.position = "none")
+```
+
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=density, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Density (no/30m^2)") + stat_summary(geom = "errorbar", fun.data = mean_se) + theme_bw() + theme(legend.position = "none")
+```
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=biomass, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Biomass (g)") + facet_grid(.~site, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) 
+```
+
+Anova analysis on overall biomass between surveys and sites: data square root transformed to meet the assumptions
+
+```{r}
+anova1 <- aov(sqrt(biomass) ~ as.character(survey) * site, data = final_best)
+summary.aov(anova1)
+TukeyHSD(anova1)
+```
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=density, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Density (n/30m2)") + facet_grid(.~site, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) 
+```
+
+
+```{r}
+anovaden <- aov(sqrt(density) ~ as.character(survey) * site, data = final_best)
+summary.aov(anovaden)
+TukeyHSD(anovaden)
+```
+
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean") + facet_grid(trophic_guild~site, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) 
+```
+
+```{r}
+ggplot(data = final_best, aes(x = site, y=biomass, fill = site)) + geom_bar(stat = "summary", fun.y = "mean", position = "dodge") + facet_grid(survey~trophic_guild, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se)  
+```
+
+```{r}
+ggplot(data = final_best, aes(x = site, y=biomass, fill = site)) + geom_bar(stat = "summary", fun.y = "mean", position = "dodge") + facet_grid(trophic_guild~survey, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se)  
+```
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "dodge") + facet_grid(.~site, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge") + scale_y_log10()
+```
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", ) + facet_grid(.~site, scales = "free") + scale_y_log10()
+```
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + facet_grid(.~site, scales = "free") + labs(y = "% biomass") + scale_x_discrete(name = "survey", limit=c("1", "2", "3", "4", "5", "6")) + theme_bw()
+```
+
+```{r}
+ggplot(data = final_best, aes(x = survey, y=density, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + facet_grid(.~site, scales = "free") + labs(y = "% biomass") + scale_x_discrete(name = "survey", limit=c("1", "2", "3", "4", "5", "6")) + theme_bw()
+```
+
+
+
+
