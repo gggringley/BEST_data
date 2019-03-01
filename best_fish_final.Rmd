@@ -142,6 +142,95 @@ ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + ge
 ggplot(data = final_best, aes(x = survey, y=density, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + facet_grid(.~site, scales = "free") + labs(y = "% biomass") + scale_x_discrete(name = "survey", limit=c("1", "2", "3", "4", "5", "6")) + theme_bw()
 ```
 
+```{r}
+final_best_clean <- filter(final_best, biomass>0)
+```
+
+
+```{r}
+best_matrix <- final_best_clean %>% group_by(survey, site, species)
+```
+```{r}
+best_matrix2 <- summarise(best_matrix, bio = mean(biomass), den = mean(density))
+```
+```{r}
+matrix_best_pcoa <- read_csv("~/github/BEST_data/data/percent_bio_clean.csv")
+library(tidyr)
+# The arguments to spread():
+# - data: Data object
+# - key: Name of column containing the new column names
+# - value: Name of column containing values
+matrix_wide_pcoa <- spread(matrix_best_pcoa, species, percent_bio)
+matrix_wide_pcoa
+```
+
+```{r}
+
+matrix_wide_pcoa[is.na(matrix_wide_pcoa)] <-0
+matrix_wide_pcoa
+
+```
+
+```{r}
+matrix_wide_pcoa$id <- c("HS1_1", "NNE_1", "XL_1", "HS1_2", "NNE_2", "XL_2", "XL_3", "HS1_4", "XL_4", "HS1_5", "NNE_5", "XL_5", "HS1_6", "NNE_6", "XL_6")
+matrix_wide_pcoa
+```
+```{r}
+library(tidyverse)
+#need to figure out the row name issue
+matrix_wide_pcoa[1] = NULL
+matrix_wide_pcoa[1] = NULL
+row.names(matrix_wide_pcoa) <- matrix_wide_pcoa$id
+matrix_wide_pcoa$id = NULL
+```
+
+```{r}
+library(tidyverse)  # data manipulation
+library(cluster)    # clustering algorithms
+library(factoextra)
+```
+
+
+```{r}
+library(ggplot2)
+cluster_best <- kmeans(matrix_wide_pcoa[,-1], centers = 3, nstart = 25)
+str(cluster_best)
+pcaplot <- fviz_cluster(cluster_best, data = matrix_wide_pcoa[,-1], fill = "darkblue") + ylim(-2.5,4.5) + theme_classic()
+pcaplot
+```
+```{r}
+library(vegan)
+
+```
+
+
+```{r}
+# apply PCA - scale. = TRUE is highly 
+# advisable, but default is FALSE. 
+pca_best <- prcomp(matrix_wide_pcoa,
+                 center = TRUE,
+                 scale. = TRUE) 
+```
+plotting pricipal component analysis
+```{r}
+autoplot(pca_best, data = matrix_wide_pcoa, label = TRUE, colour = 'site')
+```
+Adding 
+```{r}
+library(ggfortify)
+pca.plot2 <- autoplot(pca_best, data = matrix_wide_pcoa, colour = 'site', frame = TRUE, frame.type = "convex")
+pca.plot2
+```
+
+```{r}
+pam_plot <- fviz_pca_ind(pca_best, label="none", habillage=matrix_wide_pcoa$site,
+     addEllipses=TRUE, ellipse.level=0.95, palette = "Dark2")
+pam_plot
+```
+
+
+
+
 
 
 
