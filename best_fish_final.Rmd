@@ -337,7 +337,8 @@ ggplot(data = demog_best[-301,], aes(x = date, y = tl_cm, fill = date)) + geom_b
 ```
 
 ```{r}
-ggplot(data = demog_best[-301,], aes(x = site, fill = sex)) + geom_bar(position = "fill") + theme_classic() + scale_fill_brewer(palette = "Set1") + ylab("Percent") + xlab("")
+ggplot(data = demog_best[-301,], aes(x = site, fill = sex)) + geom_bar(position = "fill", color = "black") + theme_classic() + scale_fill_brewer(palette = "Set1") + ylab("Percent") + xlab("")
+ggsave(filename = "sex_ratio.eps", device = "eps", path = "~/github/BEST_data")
 ```
 ```{r}
 
@@ -346,7 +347,7 @@ head(lionfish_best)
 ```
 
 ```{r}
-lf_density_by_time <- ggplot(data = lionfish_best, aes(x = survey, y=lf_quad, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Density (no/250m^2)") + stat_summary(geom = "errorbar", fun.data = mean_se) + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + theme_classic() + geom_line(aes(x = survey, y = lf_removed, color = site)) 
+lf_density_by_time <- ggplot(data = lionfish_best, aes(x = survey, y=lf_quad, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Lionfish Density (no/250m^2)/Lionfsh Removed") + stat_summary(geom = "errorbar", fun.data = mean_se) + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + theme_bw() + geom_line(aes(x = survey, y = lf_removed, color = site)) 
 ggsave(filename = "lf_density_by_time.eps", plot = lf_density_by_time, device = "eps", path = "~/github/BEST_data")
 lf_density_by_time
 ```
@@ -358,6 +359,8 @@ efficiency
 ```{r}
 ggsave(filename = "efficiency.eps", plot = efficiency, device = "eps", path = "~/github/BEST_data")
 ```
+
+
 
 ```{r}
 lionfish_best.2 <- read_csv("~/github/BEST_data/data/lionfish_data_2.csv")
@@ -447,12 +450,79 @@ summary(fit_culled.best)
 ```
 
 
+```{r}
+culling_effect <- ggplot(data = lionfish_best.2[4:15,], aes(x = prev_removed, y = lf_removed/day_unculled)) + geom_point() + geom_smooth(method='lm',formula=y~x) + theme_classic() + ylab("Rate of Recolonisation (#/day)") + xlab("Initial Density")
+
+lm_eqn <- function(lionfish_best.2){
+    m <- lm(lf_removed/day_unculled ~ prev_removed, lionfish_best.2[4:15,]);
+    eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+         list(a = format(coef(m)[1], digits = 2),
+              b = format(coef(m)[2], digits = 2),
+             r2 = format(r2, digits = 3)))
+    as.character(as.expression(eq));
+}
+culling_effect1 <- culling_effect + geom_text(x = 25, y = 2, label = lm_eqn(lionfish_best.2), parse = TRUE)
+culling_effect1
+scale((corrdata[,-1]), center = TRUE, scale = TRUE)
+colonisation_corr <- glm((lf_removed/day_unculled)~prev_removed, data=corrdata)
+summary(colonisation_corr)
+library(vegan)
+r2 <- RsquareAdj(colonisation_corr)
+r2
+```
 
 
 
 
+```{r}
+ggsave(filename = "recolonization_density.eps", plot = culling_effect, device = "eps", path = "~/github/BEST_data")
+```
+```{r}
+lf_efficiency <- ggplot(data = lionfish_best.2[4:15,], aes(x = survey, y=(((lf_removed)/day_unculled)), fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Daily Rate of Recolonisation") + stat_summary(geom = "errorbar", fun.data = mean_se) + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + theme_bw() + theme(legend.position = "none")
 
+lf_efficiency
+```
+```{r}
+ggsave(filename = "recolonization_survey.eps", plot = lf_efficiency, device = "eps", path = "~/github/BEST_data")
+```
 
+```{r}
+lf_recolonization <- ggplot(data = lionfish_best.2[4:15,], aes(x = site, y=(((lf_removed)/day_unculled)), fill = site)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Daily Rate of Recolonisation") + stat_summary(geom = "errorbar", fun.data = mean_se) + theme_bw() 
 
+lf_recolonization
+```
 
+```{r}
+ggsave(filename = "recolonization_site.eps", plot = lf_recolonization, device = "eps", path = "~/github/BEST_data")
+```
+```{r}
+lf_recolonization.2 <- ggplot(data = lionfish_best.2[4:15,], aes(x = survey, y=(((lf_removed)/day_unculled)), fill = site)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Daily Rate of Recolonisation") + stat_summary(geom = "errorbar", fun.data = mean_se) + facet_grid(site~., scales = "free") + theme_bw() 
+lf_recolonization.2
+```
+
+```{r}
+anovarecol <- aov(sqrt(lf_removed/day_unculled) ~ site*survey, data = lionfish_best.2)
+summary.aov(anovarecol)
+
+```
+
+```{r}
+anovarecol.site <- aov(sqrt(lf_removed/day_unculled) ~ site, data = lionfish_best.2)
+summary.aov(anovarecol.site)
+
+```
+
+```{r}
+library(dplyr)
+```
+```{r}
+lionfish_best.2 %>%
+
+summarise(avg = mean((lf_removed/day_unculled)), sd(lf_removed/day_unculled))
+```
+```{r}
+lionfish_best.2[4:15,] %>%
+group_by(survey) %>%
+summarise(avg = mean((lf_removed/day_unculled)), sd(lf_removed/day_unculled))
+```
 

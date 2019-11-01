@@ -1,0 +1,381 @@
+---
+title: "best_2_proj"
+author: "GG"
+date: "August 28, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(dbplyr)
+```
+```{r}
+proj2_best_2 <- read_csv("~/github/BEST_data/data/fish_tidy_best_all.csv")
+head(proj2_best_2)
+final_best2_clean <- filter(proj2_best_2, biomass>0, density>0)
+head(final_best2_clean)
+```
+
+Average Data for total density and total biomass of all fish on each transect
+```{r}
+library(dbplyr)
+sum_fish_best <- final_best2_clean %>% group_by(mo_yr, survey, site, transect) %>% summarise(total_den = sum(density), total_bio = sum(biomass))
+head(sum_fish_best)
+```
+```{r}
+shapiro.test(log(sum_fish_best$total_bio))
+```
+
+```{r}
+bio_reg <- ggplot(data = sum_fish_best, aes(y = log(total_bio), x = survey)) + geom_smooth(method='lm',formula=y~x )+ stat_poly_eq(formula = y~x, 
+                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), label.x.npc = "left", label.y.npc = 0.9, 
+                parse = TRUE, size = 5) + stat_fit_glance(formula = y~x, aes(label = paste("P = ", signif(..p.value.., digits = 3), sep = "")), label.x.npc = "left", label.y.npc = 0.35, size = 5, face = "italics") + geom_point()  + scale_fill_brewer(palette = "Blues", direction = -1) + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + labs(y = "Fish Biomass (g)") +theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+bio_reg
+```
+```{r}
+shapiro.test(sqrt(log(sum_fish_best$total_den)))
+```
+```{r}
+den_reg <- ggplot(data = sum_fish_best, aes(y = sqrt(log(total_den)), x = survey)) + geom_smooth(method='lm',formula=y~x )+ stat_poly_eq(formula = y~x, 
+                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), label.x.npc = "left", label.y.npc = 0.9, 
+                parse = TRUE, size = 5) + stat_fit_glance(formula = y~x, aes(label = paste("P = ", signif(..p.value.., digits = 3), sep = "")), label.x.npc = "left", label.y.npc = 0.35, size = 5, face = "italics") + geom_point()  + scale_fill_brewer(palette = "Blues", direction = -1) + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + labs(y = "Fish Density") +theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+den_reg
+```
+Differences in density and biomass between time points. 
+```{r}
+library(dbplyr)
+diff_fish_best <- sum_fish_best %>% group_by(survey, site) %>% summarise(den = sum(total_den), bio = sum(total_bio)) %>% group_by(site) %>% mutate_at(vars(den), funs(den - lag(den))) %>% mutate_at(vars(bio), funs(bio - lag(bio)))
+head(diff_fish_best)
+```
+
+Average data for density and biomass by trophic group
+```{r}
+library(dbplyr)
+sum_trophic_best <- final_best2_clean %>% group_by(mo_yr, survey, site, transect, trophic_guild) %>% summarise(total_den = mean(density), total_bio = mean(biomass))
+head(sum_trophic_best)
+```
+```{r}
+shapiro.test(1/(log(sum_trophic_best$total_den)+1))
+```
+```{r}
+den_troph_reg <- ggplot(data = sum_trophic_best, aes(y = (total_den), x = survey, color = trophic_guild)) + geom_smooth(method='lm',formula=y~x )+ stat_poly_eq(formula = y~x, 
+                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), label.x.npc = .5, label.y.npc ="top", parse = TRUE, size = 5, face = "italics") + stat_fit_glance(formula = y~x, aes(label = paste("P = ", signif(..p.value.., digits = 2), sep = "")), label.x.npc = "right", label.y.npc = "top", size = 5, face = "italics") + geom_point()  + scale_fill_brewer(palette = "Blues", direction = -1) + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + labs(y = "Fish Density") +theme_bw() + theme(legend.position = "right") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+den_troph_reg
+```
+
+Averaage Difference by trophic group
+```{r}
+library(dbplyr)
+diff_trophic_best <- sum_trophic_best %>% group_by(survey, site, trophic_guild) %>% summarise(den = sum(total_den), bio = sum(total_bio)) %>% group_by(site, trophic_guild) %>% mutate_at(vars(den), funs(den - lag(den))) %>% mutate_at(vars(bio), funs(bio - lag(bio)))
+head(diff_trophic_best)
+```
+
+Contrtibute of each trophic guild to biomass at each site
+```{r}
+troph_guild_sites_2 <- ggplot(data = sum_trophic_best, aes(x = site, y=total_bio, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100")) + theme_bw() + labs(x="")
+
+troph_guild_sites_2
+```
+
+
+Contibution of each trophic guild to biomass overtime averaged across sites
+```{r}
+trophic_guilds_time_2 <- ggplot(data = sum_trophic_best, aes(x = mo_yr, y=total_bio, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill", colour = "black") + scale_fill_brewer(palette = "YlGnBu") + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100")) + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019"))+ theme_bw() 
+ggsave(filename = "bestproj2_trophic_guilds_time.eps", plot = trophic_guilds_time_2, device = "eps", path = "~/github/BEST_data")
+trophic_guilds_time_2
+```
+
+Mean overall biomass per trophic guild over time
+```{r}
+ggplot(data = sum_trophic_best, aes(x = survey, y=total_bio, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "dodge", colour = "black") + scale_fill_brewer(name = "Trophic Guild", labels = c("Herbivore", "Invertivore", "Macrocarnivore", "Omnivore", "Planktivore"), palette = "YlGnBu") + stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge") + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + theme_bw() + labs(y="Mean Biomass(g)") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.title = element_text(size = 14, face = "bold"), legend.text = element_text(size = 12)) + facet_grid(trophic_guild~., scales = "free")
+ggsave(filename = "bestproj2_trophic_guilds_time_totalbio.eps", device = "eps", path = "~/github/BEST_data")
+```
+Mean density of each trophic group over time
+
+```{r}
+ggplot(data = sum_trophic_best, aes(x = survey, y=total_den, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "stack", colour = "black") + scale_fill_brewer(name = "Trophic Guild", labels = c("Herbivore", "Invertivore", "Macrocarnivore", "Omnivore", "Planktivore"), palette = "YlGnBu") + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + theme_bw() + labs(y="Mean Abundance (no fish/60m^2)") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.title = element_text(size = 14, face = "bold"), legend.text = element_text(size = 12))
+ggsave(filename = "bestproj2_trophic_guilds_time_totalden.eps", device = "eps", path = "~/github/BEST_data")
+```
+
+Mean biomass of each trophic group per survey per site
+```{r}
+ggplot(data = sum_trophic_best, aes(x = mo_yr, y=total_bio, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill", colour = "black") + scale_fill_brewer(palette = "Dark2") + facet_grid(site~., scales = "free") + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100"))+ theme_bw()
+```
+
+```{r}
+anovatg2 <- aov(sqrt(total_bio) ~ trophic_guild * site * mo_yr, data = sum_trophic_best)
+summary.aov(anovatg2)
+TukeyHSD(anovatg2)
+```
+
+```{r}
+plankto_bio2 <- subset(sum_trophic_best, trophic_guild=="planktivore")
+anovatgpbio2 <- aov(sqrt(total_bio) ~ site * mo_yr, data = plankto_bio2)
+summary.aov(anovatgpbio2)
+TukeyHSD(anovatgpbio2)
+```
+
+```{r}
+carno_bio2 <- subset(sum_trophic_best, trophic_guild=="macro_carnivore")
+anovatgcbio2 <- aov(sqrt(total_bio) ~ site * mo_yr, data = carno_bio2)
+summary.aov(anovatgcbio2)
+TukeyHSD(anovatgcbio2)
+```
+
+```{r}
+inverto_bio2 <- subset(sum_trophic_best, trophic_guild=="invertivore")
+anovatgibio2 <- aov(sqrt(total_bio) ~ site * mo_yr, data = inverto_bio2)
+summary.aov(anovatgibio2)
+TukeyHSD(anovatgibio2)
+```
+
+```{r}
+herbi_bio2 <- subset(sum_trophic_best, trophic_guild=="herbivore")
+anovatghbio2 <- aov(sqrt(total_bio) ~ site * mo_yr, data = herbi_bio2)
+summary.aov(anovatghbio2)
+TukeyHSD(anovatghbio2)
+```
+
+```{r}
+omni_bio2 <- subset(sum_trophic_best, trophic_guild=="omnivore")
+anovatgobio2 <- aov(sqrt(total_bio) ~ site * mo_yr, data = omni_bio2)
+summary.aov(anovatgobio2)
+TukeyHSD(anovatgobio2)
+```
+
+```{r}
+biomass_by_time_2 <- ggplot(data = sum_fish_best, aes(x = survey, y=total_bio, fill = as.factor(survey))) + geom_bar(stat = "summary", fun.y = "mean", color = "black") + labs(y = "Mean Biomass (g)") + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + stat_summary(geom = "errorbar", fun.data = mean_se) + scale_fill_brewer(palette = "Blues", direction = -1) +theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+ggsave(filename = "bestproj2_biomass_by_time.eps", plot = biomass_by_time_2, device = "eps", path = "~/github/BEST_data")
+biomass_by_time_2
+```
+```{r}
+bio_reg <- ggplot(data = sum_fish_best, aes(y = total_bio, x = survey)) + geom_point()  + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + scale_fill_brewer(palette = "Blues", direction = -1) +theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ geom_smooth(method='lm',formula=y~x)
+bio_reg
+```
+```{r}
+density_by_time_2 <- ggplot(data = sum_fish_best, aes(x = survey, y=total_den, fill = as.factor(survey))) + geom_bar(stat = "summary", fun.y = "mean", color = "black") + labs(y = "Mean Density (no/60m^2)") + stat_summary(geom = "errorbar", fun.data = mean_se) + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + scale_fill_brewer(palette = "Blues", direction = -1) +theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave(filename = "bestproj2_density_by_time.eps", plot = density_by_time_2, device = "eps", path = "~/github/BEST_data")
+density_by_time_2
+```
+
+```{r}
+biomass_site_2 <- ggplot(data = sum_fish_best, aes(x = mo_yr, y=total_bio, fill = mo_yr)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Biomass (g)") + facet_grid(.~site, scales = "free") + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) + theme_bw() 
+ggsave(filename = "bestproj2_biomass_by_site2.eps", plot = biomass_site_2, device = "eps", path = "~/github/BEST_data")
+biomass_site_2
+```
+
+Anova analysis on overall biomass between surveys and sites: data square root transformed to meet the assumptions
+
+```{r}
+anova_biomass_2 <- aov(sqrt(total_bio) ~ mo_yr * site, data = sum_fish_best)
+summary.aov(anova_biomass_2)
+TukeyHSD(anova_biomass_2)
+```
+
+```{r}
+ggplot(data = sum_fish_best, aes(x = mo_yr, y=total_den, fill = mo_yr)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Density (n/30m2)") + facet_grid(.~site, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) 
+```
+
+```{r}
+anovaden_proj2 <- aov(sqrt(total_den) ~ mo_yr * site, data = sum_fish_best)
+summary.aov(anovaden_proj2)
+TukeyHSD(anovaden_proj2)
+```
+
+```{r}
+ggplot(data = sum_trophic_best, aes(x = mo_yr, y=total_bio, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + facet_grid(.~site, scales = "free") + labs(y = "% biomass") + scale_x_discrete(name = "survey", limit=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + theme_bw()
+```
+
+```{r}
+
+lionfish_best2 <- read_csv("~/github/BEST_data/data/lionfish_best_proj2.csv")
+head(lionfish_best2)
+
+```
+Lionfish Density over time
+```{r}
+lf_density_proj2 <- ggplot(data = lionfish_best2, aes(x = survey, y=lf_quad, fill = as.factor(survey))) + geom_bar(stat = "summary", fun.y = "mean", color = "black") + scale_fill_brewer(palette = "Reds", direction = -1) + labs(y = "Lionfish Density (no/250m^2)") + stat_summary(geom = "errorbar", fun.data = mean_se) + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019"))  + theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + geom_smooth(aes(x = as.integer(survey), y = lf_removed), se = FALSE) 
+lf_density_proj2
+ggsave(filename = "lf_density_best2.eps", plot = lf_density_proj2, device = "eps", path = "~/github/BEST_data")
+```
+
+```{r}
+shapiro.test(sqrt(lionfish_best2$lf_quad))
+```
+```{r}
+lion_reg <- ggplot(data = lionfish_best2, aes(y = sqrt(sqrt(lf_quad)), x = survey)) + geom_smooth(method='lm',formula=y~x )+ stat_poly_eq(formula = y~x, 
+                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), label.x.npc = "left", label.y.npc = "bottom", 
+                parse = TRUE, size = 5) + stat_fit_glance(formula = y~x, aes(label = paste("P = ", signif(..p.value.., digits = 3), sep = "")), label.x.npc = "right", label.y.npc = 0, parse = FALSE, size = 5, face = "italics") + geom_point()  + scale_fill_brewer(palette = "Blues", direction = -1) + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + labs(y = "Fish Density") +theme_classic() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+lion_reg
+```
+
+```{r}
+shapiro.test(sqrt(lionfish_best2$efficiency))
+```
+```{r}
+library(ggpmisc)
+efficiency2 <- ggplot(data = lionfish_best2, aes(x = sqrt(efficiency), y = lf_density)) + geom_point() + geom_smooth(method='lm',formula=y~x) + stat_poly_eq(formula = y~x, 
+                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), label.x.npc = "left", label.y.npc = 0.9, 
+                parse = TRUE, size = 5) + stat_fit_glance(formula = y~x, aes(label = paste("P = ", signif(..p.value.., digits = 3), sep = "")), label.x.npc = "left", label.y.npc = 0.35, size = 5, face = "italics") + theme_classic() + xlab("Lionfish Density (no/hectare)") + ylab("Culling Efficiency") 
+
+efficiency2
+ggsave(filename = "culling_efficiency_best2.eps", plot = efficiency2, device = "eps", path = "~/github/BEST_data")
+```
+```{r}
+install.packages("ggpmisc")
+```
+
+
+```{r}
+library(ggpmisc)
+efficiency3 <- ggplot(data = lionfish_best2, aes(x = efficiency, y = lf_density)) + geom_smooth(method='lm',formula=y~x) + stat_poly_eq(formula = y~x, 
+                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), label.x.npc = "left", label.y.npc = 0.9, 
+                parse = TRUE, size = 5) + stat_fit_glance(formula = y~x, aes(label = paste("P = ", signif(..p.value.., digits = 3), sep = "")), label.x.npc = "left", label.y.npc = 0.35, size = 5, face = "italics") + geom_point()  + theme_classic() + xlab("Lionfish Density (no/hectare)") + ylab("Culling Efficiency (no removed/min)") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) 
+
+efficiency3
+ggsave(filename = "culling_efficiency_best2.eps", plot = efficiency3, device = "eps", path = "~/github/BEST_data")
+```
+```{r}
+head(lionfish_best2)
+lionfish_best2[1]=NULL
+head(lionfish_best2)
+```
+```{r}
+head(sum_fish_best)
+```
+```{r}
+library(dbplyr)
+mean_fish <- sum_fish_best %>% group_by(mo_yr, survey, site) %>% summarise(avg_den = mean(total_den), avg_bio = mean(total_bio))
+head(mean_fish)
+mean_fish[1]=NULL
+head(mean_fish)
+```
+```{r}
+lion_matrix <- left_join(lionfish_best2, mean_fish)
+head(lion_matrix)
+```
+```{r}
+library(dbplyr)
+best_diversity <- final_best2_clean %>% group_by(mo_yr, survey, site, transect) %>% summarise(richness = n_distinct(species), diversity = diversity(density, "shannon")) %>% group_by(mo_yr, survey, site) %>% summarise(avg_rich = mean(richness), avg_div = mean(diversity))
+best_diversity[1]=NULL
+head(best_diversity)
+
+```
+```{r}
+lion_matrix2 <- left_join(lion_matrix, best_diversity)
+head(lion_matrix2)
+```
+```{r}
+anovaden_2 <- aov((lf_density) ~ as.character(survey), data = lionfish_best2)
+summary.aov(anovaden_2)
+TukeyHSD(anovaden_2)
+```
+```{r}
+anovaden_3 <- aov((lf_density) ~ as.character(site), data = lionfish_best2)
+summary.aov(anovaden_3)
+TukeyHSD(anovaden_3)
+```
+THIS IS NOT WORKING _ TRY ANOTHER APPROACH
+```{r}
+best2_matrix <- final_best2_clean %>% group_by(mo_yr, site, species)
+```
+```{r}
+best2_matrix2 <- summarise(best2_matrix, bio = mean(biomass), den = mean(density))
+```
+```{r}
+best2_matrix_perc_bio <- best2_matrix2 %>% mutate(perc_bio = bio/sum(bio))
+best2_matrix_perc_den <- best2_matrix2 %>% mutate(perc_den = den/sum(den))
+
+```
+
+```{r}
+
+library(tidyr)
+# The arguments to spread():
+# - data: Data object
+# - key: Name of column containing the new column names
+# - value: Name of column containing values
+best2_matrix_perc_bio[4] = NULL
+best2_matrix_perc_bio[4] = NULL
+matrix_wide_best_bio <- spread(best2_matrix_perc_bio, species, perc_bio)
+matrix_wide_best_bio
+```
+
+```{r}
+
+matrix_wide_best_bio[is.na(matrix_wide_best_bio)] <-0
+matrix_wide_best_bio
+
+```
+```{r}
+matrix_wide_best_bio_id <- matrix_wide_best_bio %>% unite(id, site, mo_yr, sep = "_", remove = TRUE)
+matrix_wide_best_bio_id
+```
+```{r}
+library(tidyverse)  # data manipulation
+library(cluster)    # clustering algorithms
+library(factoextra)
+```
+
+
+```{r}
+library(ggplot2)
+cluster_best2 <- kmeans(matrix_wide_best_bio_id[,-1], centers = 3, nstart = 25)
+str(cluster_best2)
+pcaplot_best2 <- fviz_cluster(cluster_best2, data = matrix_wide_best_bio_id[,-1], fill = "darkblue") + ylim(-2.5,4.5) + theme_classic()
+pcaplot_best2
+```
+```{r}
+library(vegan)
+
+```
+```{r}
+# apply PCA - scale. = TRUE is highly 
+# advisable, but default is FALSE. 
+pca_best2 <- prcomp(matrix_wide_best_bio_id[,-1],
+                 center = TRUE,
+                 scale. = TRUE) 
+```
+plotting pricipal component analysis
+```{r}
+library(ggfortify)
+pca.plot2 <- autoplot(pca_best2, data = matrix_wide_best_bio_id, colour = 'id', frame = TRUE, frame.type = "convex")
+pca.plot2
+```
+
+```{r}
+pam_plot <- fviz_pca_ind(pca_best2, label="none", habillage=matrix_wide_best_bio$site,
+     addEllipses=TRUE, ellipse.level=0.95, palette = "Dark2") + theme_classic()
+pam_plot
+```
+
+```{r}
+best2_heatmap <- ggplot(data = matrix_wide_best_bio_id, aes(x = id, y = species)) + geom_tile(aes(y = reorder(species, perc_bio, mean, order = TRUE), fill = perc_bio), color = "navyblue", width = 0.85) +
+  scale_fill_gradient2(low = "snow", high = "navyblue", mid = "steelblue", midpoint = 0.375) +
+  ylab("Species") +
+  xlab("Site") +  
+  theme_classic() +
+  theme(axis.text.y = element_text(face = "italic")) +
+  labs(fill = "Percent Biomass")
+best2_heatmap
+```
+
+
+
