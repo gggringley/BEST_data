@@ -23,11 +23,15 @@ final_best[ final_best == 0] <-NA
 
 Contrtibute of each trophic guild to biomass at each site
 ```{r}
-ggplot(data = final_best, aes(x = site, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100")) + theme_bw() + labs(x="")
+trophic_guilds_sites <- ggplot(data = final_best, aes(x = site, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100")) + theme_bw() + labs(x="")
+ggsave(filename = "best_trophic_guilds_sites.eps", plot = trophic_guilds_sites, device = "eps", path = "~/github/BEST_data")
+trophic_guilds_sites
 ```
 
 ```{r}
-ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + scale_fill_brewer(palette = "Dark2") + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100")) + theme_bw() + labs(x="")
+trophic_guilds_time <- ggplot(data = final_best, aes(x = survey, y=biomass, fill = trophic_guild)) + geom_bar(stat = "summary", fun.y = "mean", position = "fill") + scale_fill_brewer(palette = "Dark2") + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + scale_y_continuous(name = "Percent Biomass", labels=c("0", "25", "50", "75", "100")) + theme_bw() + labs(x="")
+ggsave(filename = "best_trophic_guilds_time.eps", plot = trophic_guilds_time, device = "eps", path = "~/github/BEST_data")
+trophic_guilds_time
 ```
 
 ```{r}
@@ -82,16 +86,22 @@ TukeyHSD(anovatgobio)
 ```
 
 ```{r}
-ggplot(data = final_best, aes(x = survey, y=biomass, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Biomass (g)") + stat_summary(geom = "errorbar", fun.data = mean_se) + theme_bw() + theme(legend.position = "none")
+biomass_by_time <- ggplot(data = final_best, aes(x = survey, y=biomass, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Biomass (g)") + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + stat_summary(geom = "errorbar", fun.data = mean_se) + theme_bw() + theme(legend.position = "none")
+ggsave(filename = "best_biomass_by_time.eps", plot = biomass_by_time, device = "eps", path = "~/github/BEST_data")
+biomass_by_time
 ```
 
 
 ```{r}
-ggplot(data = final_best, aes(x = survey, y=density, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Density (no/30m^2)") + stat_summary(geom = "errorbar", fun.data = mean_se) + theme_bw() + theme(legend.position = "none")
+density_by_time <- ggplot(data = final_best, aes(x = survey, y=density, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Density (no/30m^2)") + stat_summary(geom = "errorbar", fun.data = mean_se) + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + theme_bw() + theme(legend.position = "none")
+ggsave(filename = "best_density_by_time.eps", plot = density_by_time, device = "eps", path = "~/github/BEST_data")
+density_by_time
 ```
 
 ```{r}
-ggplot(data = final_best, aes(x = survey, y=biomass, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Biomass (g)") + facet_grid(.~site, scales = "free") + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) 
+biomass_site <- ggplot(data = final_best, aes(x = survey, y=biomass, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Biomass (g)") + facet_grid(.~site, scales = "free") + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + theme(legend.position = "none") + stat_summary(geom = "errorbar", fun.data = mean_se) + theme_bw() 
+ggsave(filename = "best_biomass_by_site.eps", plot = biomass_site, device = "eps", path = "~/github/BEST_data")
+biomass_site
 ```
 
 Anova analysis on overall biomass between surveys and sites: data square root transformed to meet the assumptions
@@ -207,7 +217,7 @@ library(vegan)
 ```{r}
 # apply PCA - scale. = TRUE is highly 
 # advisable, but default is FALSE. 
-pca_best <- prcomp(matrix_wide_pcoa,
+pca_best <- prcomp(matrix_wide_pcoa[,-1],
                  center = TRUE,
                  scale. = TRUE) 
 ```
@@ -220,13 +230,225 @@ Adding
 library(ggfortify)
 pca.plot2 <- autoplot(pca_best, data = matrix_wide_pcoa, colour = 'site', frame = TRUE, frame.type = "convex")
 pca.plot2
+ggsave(filename = "best_pcaplot_convex.eps", plot = pca.plot2, device = "eps", path = "~/github/BEST_data")
 ```
 
 ```{r}
 pam_plot <- fviz_pca_ind(pca_best, label="none", habillage=matrix_wide_pcoa$site,
-     addEllipses=TRUE, ellipse.level=0.95, palette = "Dark2")
+     addEllipses=TRUE, ellipse.level=0.95, palette = "Dark2") + theme_classic()
 pam_plot
+ggsave(filename = "best_pcaplot_conf.eps", plot = pam_plot, device = "eps", path = "~/github/BEST_data")
 ```
+
+```{r}
+best_heatmap <- ggplot(data = matrix_best_pcoa, aes(x = site, y = species)) + geom_tile(aes(y = reorder(species, percent_bio, mean, order = TRUE), fill = percent_bio), color = "navyblue", width = 0.85) +
+  scale_fill_gradient2(low = "snow", high = "navyblue", mid = "steelblue", midpoint = 0.375) +
+  ylab("Species") +
+  xlab("Site") +  
+  theme_classic() +
+  theme(axis.text.y = element_text(face = "italic")) +
+  labs(fill = "Percent Biomass")
+ggsave(filename = "best_heatmap_blue.eps", plot = best_heatmap, device = "eps", path = "~/github/BEST_data")
+```
+```{r}
+best_heatmap_bupu <- ggplot(data = matrix_best_pcoa, aes(x = site, y = species)) + geom_tile(aes(y = reorder(species, percent_bio, mean, order = TRUE), fill = percent_bio), color = "navyblue", width = 0.85) +
+  scale_fill_gradientn(colours = RColorBrewer::brewer.pal(8, "BuPu")) +
+  ylab("Species") +
+  xlab("Site") +  
+  theme_classic() +
+  theme(axis.text.y = element_text(face = "italic")) +
+  labs(fill = "Percent Biomass")
+ggsave(filename = "best_heatmap_bupu.eps", plot = best_heatmap_bupu, device = "eps", path = "~/github/BEST_data")
+```
+
+
+```{r}
+best_heatmap_red <- ggplot(data = matrix_best_pcoa, aes(x = site, y = species)) + geom_tile(aes(y = reorder(species, percent_bio, mean, order = TRUE), fill = percent_bio), color = "tomato4", width = 0.85) +
+  scale_fill_gradient2(low = "snow", high = "tomato4", mid = "tomato3", midpoint = 0.375) +
+  ylab("Species") +
+  xlab("Site") +  
+  theme_classic() +
+  theme(axis.text.y = element_text(face = "italic")) +
+  labs(fill = "Percent Biomass")
+ggsave(filename = "best_heatmap_red.eps", plot = best_heatmap_red, device = "eps", path = "~/github/BEST_data")
+```
+```{r}
+best_heatmap_den_blu <- ggplot(data = best_matrix2, aes(x = site, y = species)) + geom_tile(aes(y = reorder(species, den, mean, order = TRUE), fill = log(den)), color = "navyblue", width = 0.85) +
+  scale_fill_gradientn(colours = RColorBrewer::brewer.pal(9, "BuPu")) +
+  ylab("Species") +
+  xlab("Site") +  
+  theme_classic() +
+  theme(axis.text.y = element_text(face = "italic")) +
+  labs(fill = "Density")
+ggsave(filename = "best_heatmap_den_blu.eps", plot = best_heatmap_den_blu, device = "eps", path = "~/github/BEST_data")
+```
+```{r}
+best_heatmap_den_red <- ggplot(data = best_matrix2, aes(x = site, y = species)) + geom_tile(aes(y = reorder(species, den, mean, order = TRUE), fill = log(den)), color = "red4", width = 0.85) +
+  scale_fill_gradientn(colours = RColorBrewer::brewer.pal(9, "Reds")) +
+  ylab("Species") +
+  xlab("Site") +  
+  theme_classic() +
+  theme(axis.text.y = element_text(face = "italic")) +
+  labs(fill = "Density")
+ggsave(filename = "best_heatmap_den_red.eps", plot = best_heatmap_den_red, device = "eps", path = "~/github/BEST_data")
+best_heatmap_den_red
+```
+
+```{r}
+demog_best <- read_csv("~/github/BEST_data/data/best_tidy_demog.csv")
+head(demog_best)
+```
+
+```{r}
+histo_by_site <- ggplot(data = demog_best[-301,], aes(tl_cm, fill = site)) + geom_histogram(bins = 10) + scale_fill_brewer(palette = "Dark2") + facet_grid(site~.) + scale_x_continuous(name = "Size Class", breaks = seq(15, 45, 5)) + theme_bw() + ylab("Percent")
+ggsave(filename = "best_histo_by_site.eps", plot = histo_by_site, device = "eps", path = "~/github/BEST_data")
+histo_by_site
+```
+```{r}
+histo_by_sex <- ggplot(data = demog_best[-301,], aes(tl_cm, fill = sex)) + geom_histogram(bins = 10, position = "dodge") + scale_fill_brewer(palette = "Set1") +  scale_x_continuous(name = "Size Class", breaks = seq(15, 45, 5)) + theme_bw() + ylab("Percent")
+ggsave(filename = "best_histo_by_sex.eps", plot = histo_by_sex, device = "eps", path = "~/github/BEST_data")
+histo_by_sex
+```
+
+
+```{r}
+histo_overall <- ggplot(data = demog_best[-301,], aes(tl_cm)) + geom_histogram(bins = 10, fill = "royalblue3", colour = "black") +  scale_x_continuous(name = "Size Class", breaks = seq(10, 50, 5)) + theme_bw() + ylab("Percent")
+ggsave(filename = "best_histo_overall.eps", plot = histo_overall, device = "eps", path = "~/github/BEST_data")
+histo_overall
+```
+
+
+
+```{r}
+#mean size by site and sex
+meansize_sex_site <- ggplot(data = demog_best[-301,], aes(x = sex, y = tl_cm, fill = sex)) + geom_boxplot() + scale_fill_brewer(palette = "Set1") + theme_classic() + ylab("Total Length (cm)") + xlab("Sex") + theme(legend.position = "none")
+ggsave(filename = "meansize_sex.eps", plot = meansize_sex_site, device = "eps", path = "~/github/BEST_data")
+meansize_sex_site
+```
+
+```{r}
+#mean size by site only
+meansize_site <- ggplot(data = demog_best[-301,], aes(x = site, y = tl_cm, fill = site)) + geom_boxplot() + scale_fill_brewer(palette = "Set1") + theme_classic() + ylab("Total Length (cm)") + xlab("Site") + theme(legend.position = "none")
+ggsave(filename = "meansize_site.eps", plot = meansize_site, device = "eps", path = "~/github/BEST_data")
+meansize_site
+```
+```{r}
+ggplot(data = demog_best[-301,], aes(x = date, y = tl_cm, fill = date)) + geom_bar(stat = "summary", fun.y = "mean") + theme_classic() + ylab("Total Length (cm)") + xlab("Site") + theme(legend.position = "none") 
+```
+
+```{r}
+ggplot(data = demog_best[-301,], aes(x = site, fill = sex)) + geom_bar(position = "fill") + theme_classic() + scale_fill_brewer(palette = "Set1") + ylab("Percent") + xlab("")
+```
+```{r}
+
+lionfish_best <- read_csv("~/github/BEST_data/data/lionfish_data_2019.csv")
+head(lionfish_best)
+```
+
+```{r}
+lf_density_by_time <- ggplot(data = lionfish_best, aes(x = survey, y=lf_quad, fill = survey)) + geom_bar(stat = "summary", fun.y = "mean") + labs(y = "Mean Density (no/250m^2)") + stat_summary(geom = "errorbar", fun.data = mean_se) + scale_x_discrete(name = "Survey Number", limits=c("1", "2", "3", "4", "5", "6")) + theme_classic() + geom_line(aes(x = survey, y = lf_removed, color = site)) 
+ggsave(filename = "lf_density_by_time.eps", plot = lf_density_by_time, device = "eps", path = "~/github/BEST_data")
+lf_density_by_time
+```
+```{r}
+efficiency <- ggplot(data = lionfish_best, aes(x = efficiency, y = lf_density)) + geom_point() + geom_smooth(method='lm',formula=y~x) + theme_classic() + xlab("Lionfish Density (no/hectare)") + ylab("Culling Efficiency")
+
+efficiency
+```
+```{r}
+ggsave(filename = "efficiency.eps", plot = efficiency, device = "eps", path = "~/github/BEST_data")
+```
+
+```{r}
+lionfish_best.2 <- read_csv("~/github/BEST_data/data/lionfish_data_2.csv")
+#time for the correlation matrix
+library(tidyverse)
+library(ggcorrplot)
+corrdata <- lionfish_best.2
+corrdata$date = NULL 
+corrdata$lf_quad = NULL
+corrdata$lf_removed = NULL
+corrdata$sst = NULL
+corrdata$site = NULL
+corrdata$lunar_day = NULL
+corrdata$survey = NULL
+corrdata$efficiency = NULL
+head(corrdata)
+```
+```{r}
+best_corr <- round(cor(corrdata), 1)
+
+```
+```{r}
+p.mat <- cor_pmat(corrdata)
+p.mat
+```
+
+```{r}
+best_corr_plot <- ggcorrplot(best_corr, hc.order = TRUE, 
+           type = "lower", 
+           lab = TRUE, 
+           lab_size = 3, outline.col = "white",
+           p.mat = p.mat,
+           title="Correlation Matrix", 
+           colors = c("steelblue4", "white", "red"),
+           ggtheme=theme_bw)
+best_corr_plot
+```
+
+```{r}
+ggsave(filename = "correlation_matrix.eps", plot = best_corr_plot, device = "eps", path = "~/github/BEST_data")
+```
+
+```{r}
+library(devtools)
+library(ggbiplot)
+library(ggfortify)
+```
+
+
+```{r}
+best.pca <- corrdata[,-1]
+d.factanal.best <- factanal(best.pca, factors = 2, scores = 'regression')
+pca.plot.best <- autoplot(d.factanal.best, data = corrdata, colour = 'lf_density', size = 4,
+         loadings = TRUE, loadings.label = TRUE, loadings.label.size  = 5) + theme_classic()
+pca.plot.best
+```
+```{r}
+ggsave(filename = "factanal_pca.eps", plot = pca.plot.best, device = "eps", path = "~/github/BEST_data")
+```
+GLM model with all variables included showing covariance among possible drivers. 
+```{r}
+scale((corrdata[,-1]), center = TRUE, scale = TRUE)
+fit.best <- glm((lf_density)~prey_density+kg_30m2+bt+temp_diff+prev_removed, data=corrdata, family = Gamma())
+summary(fit.best)
+```
+Testing covairance
+```{r}
+#install.packages('data.table')
+library(car)
+sqrt(vif(fit.best))
+```
+*using Gamma distribution as this model results in the most "normal" data, see plots below of model fits*  
+```{r}
+scale((corrdata[,-1]), center = TRUE, scale = TRUE)
+fit_den.best <- glm((lf_density)~prey_density, data=corrdata, family = Gamma)
+fit_bio.best <- glm((lf_density)~kg_30m2, data=corrdata, family = Gamma)
+fit_btemp.best <- glm((lf_density)~bt, data=corrdata,family = Gamma)
+fit_tempdiff.best <- glm((lf_density)~temp_diff, data=corrdata,family = Gamma)
+fit_culled.best <- glm((lf_density)~prev_removed, data=corrdata, family = Gamma)
+AIC(fit_den.best, fit_bio.best, fit_btemp.best, fit_tempdiff.best, fit_culled.best)
+coef(fit_den.best, fit_bio.best, fit_btemp.best, fit_tempdiff.best, fit_culled.best)
+summary(fit_den.best)
+summary(fit_bio.best)
+summary(fit_btemp.best)
+summary(fit_tempdiff.best)
+summary(fit_culled.best)
+```
+
+
+
+
 
 
 
