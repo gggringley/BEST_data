@@ -1,0 +1,64 @@
+---
+title: "best diversity"
+author: "GG"
+date: "11/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(dbplyr)
+```
+```{r}
+proj2_best_2 <- read_csv("~/github/BEST_data/data/fish_tidy_best_all.csv")
+head(proj2_best_2)
+final_best2_clean <- filter(proj2_best_2, biomass>0, density>0)
+head(final_best2_clean)
+```
+```{r}
+library(dbplyr)
+best_fish_richness <- final_best2_clean %>% group_by(mo_yr, survey, site, transect) %>% summarise(richness = n_distinct(species))
+head(best_fish_richness)
+```
+
+```{r}
+library(vegan)
+best_fish_diversity <- final_best2_clean %>% group_by(mo_yr, survey, site, transect) %>% summarise(diversity = diversity(density, "shannon"))
+head(best_fish_diversity)
+```
+
+```{r}
+mean_diversity <-ggplot(data = best_fish_diversity, aes(x = survey, y=diversity, fill = as.factor(survey))) + geom_bar(stat = "summary", fun.y = "mean", position = "dodge", color = "black") + labs(y = "Mean Species Diversity (Shannon Index)") + stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge") + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + scale_fill_brewer(palette = "Blues", direction = -1) +theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+mean_diversity
+ggsave(filename = "mean_diversity.eps",plot = mean_diversity, path = "~/github/BEST_data", device = "eps",width = 6,height = 4,dpi = 600)
+```
+
+
+```{r}
+mean_richness <-ggplot(data = best_fish_richness, aes(x = survey, y=richness, fill = as.factor(survey))) + geom_bar(stat = "summary", fun.y = "mean", position = "dodge", color = "black") + labs(y = "Mean Species Diversity (Shannon Index)") + stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge") + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + scale_fill_brewer(palette = "Blues", direction = -1) +theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+mean_richness
+ggsave(filename = "mean_richness.eps",plot = mean_richness, path = "~/github/BEST_data", device = "eps",width = 6,height = 4,dpi = 600)
+```
+
+```{r}
+library(ggpmisc)
+div_reg <- ggplot(data = best_fish_diversity, aes(y = diversity, x = survey)) + geom_smooth(method='lm',formula=y~x )+ stat_poly_eq(formula = y~x, 
+                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), label.x.npc = "left", label.y.npc = 0.9, 
+                parse = TRUE, size = 5) + stat_fit_glance(formula = y~x, aes(label = paste("P = ", signif(..p.value.., digits = 3), sep = "")), label.x.npc = "left", label.y.npc = 0.35, size = 5, face = "italics") + geom_point()  + scale_fill_brewer(palette = "Blues", direction = -1) + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + labs(y = "Diversity (Shannon Index)") +theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+div_reg
+```
+```{r}
+rich_reg <- ggplot(data = best_fish_richness, aes(y = richness, x = survey)) + geom_smooth(method='lm',formula=y~x )+ stat_poly_eq(formula = y~x, 
+                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), label.x.npc = "left", label.y.npc = 0.9, 
+                parse = TRUE, size = 5) + stat_fit_glance(formula = y~x, aes(label = paste("P = ", signif(..p.value.., digits = 3), sep = "")), label.x.npc = "left", label.y.npc = 0.35, size = 5, face = "italics") + geom_point()  + scale_fill_brewer(palette = "Blues", direction = -1) + scale_x_discrete(name = "Survey Date", limits=c("July_2017", "Aug_2017", "Sept_2017", "Oct_2017", "Nov_2017", "Dec_2017", "May_2018", "Jan_2019")) + labs(y = "Species Richness") +theme_bw() + theme(legend.position = "none") + theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+rich_reg
+```

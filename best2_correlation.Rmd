@@ -1,0 +1,99 @@
+---
+title: "correlation matrix"
+author: "GG"
+date: "11/8/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(dbplyr)
+```
+```{r}
+lionfish_best2 <- read_csv("~/github/BEST_data/data/lionfish_best_proj2.csv")
+head(lionfish_best2)
+
+```
+
+```{r}
+lionfish_best2[1]=NULL
+head(lionfish_best2)
+```
+
+```{r}
+proj2_best_2 <- read_csv("~/github/BEST_data/data/fish_tidy_best_all.csv")
+head(proj2_best_2)
+final_best2_clean <- filter(proj2_best_2, biomass>0, density>0)
+head(final_best2_clean)
+```
+
+```{r}
+library(dbplyr)
+sum_fish_best <- final_best2_clean %>% group_by(mo_yr, survey, site, transect) %>% summarise(total_den = sum(density), total_bio = sum(biomass))
+head(sum_fish_best)
+```
+
+```{r}
+library(dbplyr)
+mean_fish <- sum_fish_best %>% group_by(mo_yr, survey, site) %>% summarise(avg_den = mean(total_den), avg_bio = mean(total_bio))
+head(mean_fish)
+mean_fish[1]=NULL
+head(mean_fish)
+```
+```{r}
+lion_matrix <- left_join(lionfish_best2, mean_fish)
+head(lion_matrix)
+```
+```{r}
+library(vegan)
+library(dbplyr)
+best_diversity <- final_best2_clean %>% group_by(mo_yr, survey, site, transect) %>% summarise(richness = n_distinct(species), diversity = diversity(density, "shannon")) %>% group_by(mo_yr, survey, site) %>% summarise(avg_rich = mean(richness), avg_div = mean(diversity))
+best_diversity[1]=NULL
+head(best_diversity)
+
+```
+
+```{r}
+lion_matrix2 <- left_join(lion_matrix, best_diversity)
+head(lion_matrix2)
+```
+
+```{r}
+library(ggcorrplot)
+lion_matrix2[1]=NULL
+lion_matrix2[1]=NULL
+lion_matrix2[1]=NULL
+lion_matrix2[1]=NULL
+lion_matrix2[2]=NULL
+lion_matrix2[5]=NULL
+lion_matrix2[5]=NULL
+head(lion_matrix2)
+lion_matrix2[2]=NULL
+lion_matrix2[2]=NULL
+lion_matrix2[2]=NULL
+head(lion_matrix2)
+corr <- round(cor(lion_matrix2), 1)
+```
+```{r}
+p.mat <- cor_pmat(lion_matrix2)
+p.mat
+
+```
+
+This figure includes the r values. These values can be removed by elimiating the lab = TRUE assignment. TO remove the grid lines change ggtheme to theme_classic
+```{r}
+best_corr <- ggcorrplot(corr, hc.order = TRUE, 
+           type = "lower", 
+           lab = TRUE, 
+           lab_size = 3, outline.col = "white",
+           p.mat = p.mat,
+           title="Correlogram of Lionfish Density", 
+           colors = c("darkblue", "white", "red"),
+           ggtheme=theme_bw)
+best_corr
+```
